@@ -1,0 +1,293 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --font-mono: var(--font-mono), ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+
+  /* Terminal palette — driven by the active theme class on the shell. */
+  --color-term: var(--term);
+  --color-term-dim: var(--term-dim);
+  --color-term-faint: var(--term-faint);
+  --color-term-bg: var(--term-bg);
+  --color-term-panel: var(--term-panel);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+/* ---- Terminal themes ---------------------------------------------------- */
+/* Each theme sets the phosphor color, dimmed/faint variants, a glow color,
+   and the deep-dark background it burns onto. */
+.theme-green {
+  --term: #3dff74;
+  --term-dim: #21b04c;
+  --term-faint: #12602a;
+  --term-bg: #020a05;
+  --term-panel: #04160b;
+  --glow: 61, 255, 116;
+}
+.theme-amber {
+  --term: #ffb642;
+  --term-dim: #c07f22;
+  --term-faint: #5f3f11;
+  --term-bg: #0a0600;
+  --term-panel: #170f02;
+  --glow: 255, 182, 66;
+}
+.theme-blue {
+  --term: #5cd6ff;
+  --term-dim: #2f92bd;
+  --term-faint: #144a63;
+  --term-bg: #00060c;
+  --term-panel: #021019;
+  --glow: 92, 214, 255;
+}
+
+@layer base {
+  * {
+    border-color: var(--term-faint);
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    background: #000;
+  }
+  ::selection {
+    background: rgba(var(--glow), 0.3);
+    color: #fff;
+  }
+  /* Themed, thin scrollbars to match the CRT vibe. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--term-faint) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--term-faint);
+    border-radius: 9999px;
+  }
+}
+
+/* ---- Text glow / bloom -------------------------------------------------- */
+.text-glow {
+  text-shadow:
+    0 0 1px rgba(var(--glow), 0.7),
+    0 0 6px rgba(var(--glow), 0.35);
+}
+.text-glow-strong {
+  text-shadow:
+    0 0 2px rgba(var(--glow), 0.9),
+    0 0 10px rgba(var(--glow), 0.55),
+    0 0 22px rgba(var(--glow), 0.3);
+}
+
+/* ---- CRT overlay: scanlines + vignette + curvature ---------------------- */
+/* Scanlines that slowly drift downward. */
+.crt-scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.16) 3px,
+    rgba(0, 0, 0, 0.16) 4px
+  );
+  background-size: 100% 4px;
+  animation: scanline-drift 10s linear infinite;
+}
+@keyframes scanline-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 400px;
+  }
+}
+
+/* Vignette + faint screen curvature at the edges. */
+.crt-vignette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 41;
+  background: radial-gradient(
+    ellipse 100% 100% at center,
+    rgba(0, 0, 0, 0) 52%,
+    rgba(0, 0, 0, 0.35) 82%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  box-shadow:
+    inset 0 0 140px 24px rgba(0, 0, 0, 0.65),
+    inset 0 0 40px 6px rgba(var(--glow), 0.05);
+  border-radius: 12px;
+}
+
+/* A very slow scan sweep for extra CRT flavor. */
+.crt-sweep::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 33%;
+  pointer-events: none;
+  z-index: 42;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--glow), 0) 0%,
+    rgba(var(--glow), 0.04) 50%,
+    rgba(var(--glow), 0) 100%
+  );
+  animation: crt-sweep 7s linear infinite;
+}
+@keyframes crt-sweep {
+  0% {
+    transform: translateY(-120%);
+  }
+  100% {
+    transform: translateY(420%);
+  }
+}
+
+/* Occasional, brief flicker — an imperfection, not a strobe. */
+.crt-flicker {
+  animation: crt-flicker 4.5s infinite steps(1);
+}
+@keyframes crt-flicker {
+  0%,
+  97%,
+  100% {
+    opacity: 1;
+  }
+  97.5% {
+    opacity: 0.86;
+  }
+  98% {
+    opacity: 0.97;
+  }
+  98.5% {
+    opacity: 0.9;
+  }
+}
+
+/* Occasional chromatic aberration: a red/cyan split that flashes for a
+   fraction of a second every several seconds. Applied to the OS content
+   wrapper — the filter's colored drop-shadows read as RGB fringing. */
+.crt-chroma {
+  animation: crt-chroma 8s infinite;
+}
+@keyframes crt-chroma {
+  0%,
+  91%,
+  100% {
+    filter: none;
+    transform: translateX(0);
+  }
+  92% {
+    filter: drop-shadow(1px 0 0 rgba(255, 0, 64, 0.5))
+      drop-shadow(-1px 0 0 rgba(0, 224, 255, 0.5));
+    transform: translateX(0.4px);
+  }
+  93% {
+    filter: none;
+    transform: translateX(0);
+  }
+  94.5% {
+    filter: drop-shadow(-1.5px 0 0 rgba(255, 0, 64, 0.55))
+      drop-shadow(1.5px 0 0 rgba(0, 224, 255, 0.55));
+    transform: translateX(-0.5px);
+  }
+  95.5% {
+    filter: none;
+    transform: translateX(0);
+  }
+}
+
+/* ---- Blinking cursor ---------------------------------------------------- */
+.cursor-blink {
+  animation: cursor-blink 1.05s steps(1) infinite;
+}
+@keyframes cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---- Glitch hover for section headers ----------------------------------- */
+.glitch {
+  position: relative;
+  display: inline-block;
+}
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  opacity: 0;
+  pointer-events: none;
+  clip-path: inset(0 0 0 0);
+}
+.glitch:hover::before {
+  opacity: 0.9;
+  color: #ff2d55;
+  animation: glitch-x 0.4s steps(2) infinite;
+}
+.glitch:hover::after {
+  opacity: 0.9;
+  color: #00e5ff;
+  animation: glitch-x 0.4s steps(2) infinite reverse;
+}
+@keyframes glitch-x {
+  0% {
+    transform: translate(0, 0);
+    clip-path: inset(0 0 70% 0);
+  }
+  25% {
+    transform: translate(-2px, 1px);
+    clip-path: inset(40% 0 20% 0);
+  }
+  50% {
+    transform: translate(2px, -1px);
+    clip-path: inset(10% 0 60% 0);
+  }
+  75% {
+    transform: translate(-1px, 1px);
+    clip-path: inset(60% 0 5% 0);
+  }
+  100% {
+    transform: translate(1px, 0);
+    clip-path: inset(20% 0 40% 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-flicker,
+  .crt-sweep::before,
+  .crt-scanlines::before,
+  .crt-chroma,
+  .cursor-blink,
+  .glitch:hover::before,
+  .glitch:hover::after {
+    animation: none;
+  }
+  .crt-chroma {
+    filter: none;
+  }
+}
