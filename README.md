@@ -127,4 +127,4 @@ To edit the portfolio details, edit [lib/portfolio-data.ts](file:///c:/Users/Alo
 
 ## 📝 License
 
-Distributed under the MIT License. Built with 💚 for GDG JIIT.
+
