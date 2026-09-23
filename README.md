@@ -125,6 +125,6 @@ To edit the portfolio details, edit [lib/portfolio-data.ts](file:///c:/Users/Alo
 
 ---
 
-## 📝 License
+
 
 
